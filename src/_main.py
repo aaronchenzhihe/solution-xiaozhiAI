@@ -136,18 +136,12 @@ class Application(object):
         self.audio_manager.stop_vad()
 
     def __working_thread_handler(self):
-        while True:
-            try:
-                if self.__keyword_spotting_event.is_set():
-                    self.stop_kws()
-                    t = Thread(target=self.__chat_process)
-                    t.start(stack_size=64)
-                    t.join()
-                    self.start_kws()
-            except Exception as e:
-                logger.error("Exception in working thread: {}".format(repr(e)))
-            finally:
-                utime.sleep_ms(1000)
+        t = Thread(target=self.__chat_process)
+        t.start(stack_size=64)
+        self.__keyword_spotting_event.wait()
+        self.stop_kws()
+        t.join()
+        self.start_kws()
 
     def __chat_process(self):
         self.start_vad()
