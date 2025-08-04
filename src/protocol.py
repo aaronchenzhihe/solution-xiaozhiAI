@@ -196,7 +196,9 @@ class WebSocketClient(object):
         if type(data) == str:
             data_dict = json.loads(data)
             text_value = data_dict.get("text")
-            print(text_value)
+            if text_value != self.__last_text_value and text_value is not None:
+                print(text_value)  # 仅在不同时打印
+                self.__last_text_value = text_value  # 更新为最新的 text_value
         # logger.debug("recv data: ", data)
         return data
 
