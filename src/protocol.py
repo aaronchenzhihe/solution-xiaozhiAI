@@ -4,6 +4,8 @@ from usr import uuid
 import uwebsocket as ws
 from usr.threading import Thread, Condition
 from usr.logging import getLogger
+import sys_bus
+from usr import dev
 
 
 logger = getLogger(__name__)
@@ -69,6 +71,7 @@ class WebSocketClient(object):
         self.__recv_thread = None
         self.__audio_message_handler = None
         self.__json_message_handler = None
+        self.__last_text_value = None
     
     def __str__(self):
         return "{}(host=\"{}\")".format(type(self).__name__, self.host)
@@ -184,7 +187,10 @@ class WebSocketClient(object):
             self.__json_message_handler(msg)
         except Exception as e:
             logger.debug("{} handle json message failed, Exception details: {}".format(self, repr(e)))
-
+            
+    # def topic(text_value):
+        
+            
     def send(self, data):
         """send data to server"""
         # logger.debug("send data: ", data)
@@ -196,11 +202,26 @@ class WebSocketClient(object):
         if type(data) == str:
             data_dict = json.loads(data)
             text_value = data_dict.get("text")
+            
+            # 对比 text_value 和上次的值是否相同
             if text_value != self.__last_text_value and text_value is not None:
                 print(text_value)  # 仅在不同时打印
                 self.__last_text_value = text_value  # 更新为最新的 text_value
+                # self.topic(text_value)
+                if "开灯" in text_value:
+                    sys_bus.publish("dev_led", "open")
+                elif "关灯" in text_value:
+                    sys_bus.publish("dev_led", "close")
+                elif "前进" in text_value:
+                    sys_bus.publish("act", "go")
+                elif "后退" in text_value:
+                    sys_bus.publish("act", "back")
+                elif "停止" in text_value:
+                    sys_bus.publish("act", "stop")
         # logger.debug("recv data: ", data)
         return data
+
+
 
     def hello(self):
         req = JsonMessage(
@@ -287,3 +308,4 @@ class WebSocketClient(object):
                     }
                 ).to_bytes()
             )
+

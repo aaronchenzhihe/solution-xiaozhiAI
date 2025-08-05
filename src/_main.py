@@ -8,9 +8,14 @@ from usr.protocol import WebSocketClient
 from usr.utils import ChargeManager, AudioManager, NetManager, TaskManager
 from usr.threading import Thread, Event, Condition
 from usr.logging import getLogger
+import sys_bus
+from machine import ExtInt
+# from usr import UI
 
 
 logger = getLogger(__name__)
+
+
 
 class Led(object):
 
@@ -82,6 +87,7 @@ class Application(object):
         self.lte_red_led = Led(23)
         self.lte_green_led = Led(24)
         self.led_power_pin = Pin(Pin.GPIO27, Pin.OUT, Pin.PULL_DISABLE, 0)
+        self.prev_emoj = None
         
         # 初始化充电管理
         self.charge_manager = ChargeManager()
@@ -198,6 +204,7 @@ class Application(object):
         gc.collect()
         logger.info("on_voice_activity_detection: {}".format(state))
         if state == 1:
+            self.audio_manager.stop()
             self.__voice_activity_event.set()  # 有人声
         else:
             self.__voice_activity_event.clear()  # 无人声
@@ -222,16 +229,36 @@ class Application(object):
             pass
         raise NotImplementedError("handle_tts_message not implemented")
 
+#"happy" "cool"  "angry"  "think"
+# ... existing code ...
     def handle_llm_message(data, msg):
+        # emoj_value = msg["emotion"]
+        # global perv_emoj
+        # if 'perv_emoj' not in globals():
+        #     perv_emoj = None
+
+        # if perv_emoj != emoj_value:
+        #     sys_bus.publish("emoji", emoj_value)
+        #     perv_emoj = emoj_value
+            
+        # Removed NotImplementedError as it seems to be a placeholder
         raise NotImplementedError("handle_llm_message not implemented")
-    
+        
     def handle_iot_message(data, msg):
         raise NotImplementedError("handle_iot_message not implemented")
+    
+    def fun():
+        print('### interrupt  {} ###'.format(args)) # args[0]:gpio号 args[1]:上升沿或下降沿
+        
+
+        
 
     def run(self):
         self.charge_manager.enable_charge()
         self.audio_manager.open_opus()
         self.talk_key.enable()
+        extint = ExtInt(ExtInt.GPIO, ExtInt.IRQ_FALLING, ExtInt.PULL_PU, self.fun)
+        extint.enable()
         self.start_kws()
         self.led_power_pin.write(1)
         self.power_red_led.blink(250, 250)
