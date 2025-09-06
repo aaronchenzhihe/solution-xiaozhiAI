@@ -7,7 +7,7 @@ from usr import uuid
 import request
 import _thread
 
-class OTAClient(object):
+class OTA(object):
     def __init__(self,mac):
         self.uuid = str(uuid.uuid4())
         self.head = {
