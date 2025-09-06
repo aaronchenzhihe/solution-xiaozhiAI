@@ -5,6 +5,7 @@ import uwebsocket as ws
 from usr.threading import Thread, Condition
 from usr.logging import getLogger
 import sys_bus
+from usr.OTA_test import OTAClient
 
 
 
@@ -138,6 +139,7 @@ class WebSocketClient(object):
         )
 
         try:
+            self.ota_client = OTAClient(mac=self.get_mac_address())
             self.__recv_thread = Thread(target=self.__recv_thread_worker)
             self.__recv_thread.start(stack_size=64)
         except Exception as e:
