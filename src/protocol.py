@@ -5,10 +5,12 @@ import uwebsocket as ws
 from usr.threading import Thread, Condition
 from usr.logging import getLogger
 import sys_bus
+from usr.OTA_test import OTA
 
 
 
 logger = getLogger(__name__)
+
 
 
 WSS_DEBUG = True
@@ -65,14 +67,19 @@ class RespHelper(Condition):
 class WebSocketClient(object):
 
     def __init__(self, host=WSS_HOST, debug=WSS_DEBUG):
+        global WSS_HOST
+        self.ota = OTA(mac=self.get_mac_address())
         self.debug = debug
-        self.host = host
+        WSS_HOST = self.ota.run()
+        self.host = WSS_HOST["websocket"]["url"]
         self.__resp_helper = RespHelper()
         self.__recv_thread = None
         self.__audio_message_handler = None
         self.__json_message_handler = None
         self.__last_text_value = None
-    
+        logger.info("OTA:{}".format(WSS_HOST))
+        
+
     def __str__(self):
         return "{}(host=\"{}\")".format(type(self).__name__, self.host)
 
@@ -129,7 +136,7 @@ class WebSocketClient(object):
         __client__ = ws.Client.connect(
             self.host, 
             headers={
-                "Authorization": "Bearer {}".format(ACCESS_TOKEN),
+                "Authorization": "Bearer {}".format(WSS_HOST["websocket"]["token"]),
                 "Protocol-Version": PROTOCOL_VERSION,
                 "Device-Id": self.get_mac_address(),
                 "Client-Id": self.generate_uuid()
@@ -138,6 +145,7 @@ class WebSocketClient(object):
         )
 
         try:
+
             self.__recv_thread = Thread(target=self.__recv_thread_worker)
             self.__recv_thread.start(stack_size=64)
         except Exception as e:
