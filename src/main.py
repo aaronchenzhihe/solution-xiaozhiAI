@@ -161,6 +161,7 @@ class Application(object):
                     if self.__voice_activity_event.is_set():
                         # 有人声
                         if not is_listen_flag:
+                            self.__protocol.abort()
                             self.__protocol.listen("start")
                             is_listen_flag = True
                         self.__protocol.send(data)
@@ -201,7 +202,7 @@ class Application(object):
         gc.collect()
         logger.info("on_voice_activity_detection: {}".format(state))
         if state == 1:
-            self.__protocol.abort()
+            # self.__protocol.abort()
             self.__voice_activity_event.set()  # 有人声
         else:
             self.__voice_activity_event.clear()  # 无人声
