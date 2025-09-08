@@ -188,7 +188,7 @@ class Application(object):
         
     def on_keyword_spotting(self, state):
         logger.info("on_keyword_spotting: {}".format(state))
-        if state == 0:
+        if state[0] == 0:
             # 唤醒词触发
             if self.__working_thread is not None and self.__working_thread.is_running():
                 return
@@ -199,7 +199,7 @@ class Application(object):
             self.__keyword_spotting_event.set()
 
     def on_voice_activity_detection(self, state):
-        gc.collect()
+        # gc.collect()
         logger.info("on_voice_activity_detection: {}".format(state))
         if state == 1:
             # self.__protocol.abort()
