@@ -41,7 +41,8 @@ class OTA(object):
         # 通过OTA得到mqtt的连接参数
         resp = request.post(self.url, data=json.dumps(self.ota_data), headers=self.head)
         self.response = resp.json()
-        print(self.response)
+        # print(self.response)
+        return self.response
 
 
 

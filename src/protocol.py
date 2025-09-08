@@ -66,14 +66,18 @@ class RespHelper(Condition):
 class WebSocketClient(object):
 
     def __init__(self, host=WSS_HOST, debug=WSS_DEBUG):
+        self.ota = OTA(mac=self.get_mac_address())
         self.debug = debug
-        self.host = host
+        WSS_HOST = self.ota.run()
+        self.host = WSS_HOST["websocket"]["url"]
         self.__resp_helper = RespHelper()
         self.__recv_thread = None
         self.__audio_message_handler = None
         self.__json_message_handler = None
         self.__last_text_value = None
-        self.ota = OTA(mac=self.get_mac_address())
+        logger.info("OTA:{}".format(WSS_HOST))
+        
+
     def __str__(self):
         return "{}(host=\"{}\")".format(type(self).__name__, self.host)
 
