@@ -12,6 +12,7 @@ from usr.OTA_test import OTA
 logger = getLogger(__name__)
 
 
+
 WSS_DEBUG = True
 WSS_HOST = "wss://api.tenclass.net/xiaozhi/v1/"
 ACCESS_TOKEN = "test-token"
@@ -66,6 +67,7 @@ class RespHelper(Condition):
 class WebSocketClient(object):
 
     def __init__(self, host=WSS_HOST, debug=WSS_DEBUG):
+        global WSS_HOST
         self.ota = OTA(mac=self.get_mac_address())
         self.debug = debug
         WSS_HOST = self.ota.run()
@@ -134,7 +136,7 @@ class WebSocketClient(object):
         __client__ = ws.Client.connect(
             self.host, 
             headers={
-                "Authorization": "Bearer {}".format(ACCESS_TOKEN),
+                "Authorization": "Bearer {}".format(WSS_HOST["websocket"]["token"]),
                 "Protocol-Version": PROTOCOL_VERSION,
                 "Device-Id": self.get_mac_address(),
                 "Client-Id": self.generate_uuid()
