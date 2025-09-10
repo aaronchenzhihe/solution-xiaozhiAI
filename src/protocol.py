@@ -6,6 +6,8 @@ from usr.threading import Thread, Condition
 from usr.logging import getLogger
 import sys_bus
 from usr.OTA_test import OTA
+import gc
+
 
 
 
@@ -136,7 +138,7 @@ class WebSocketClient(object):
         __client__ = ws.Client.connect(
             self.host, 
             headers={
-                "Authorization": "Bearer {}".format(WSS_HOST["websocket"]["token"]),
+                # "Authorization": "Bearer {}".format(WSS_HOST["websocket"]["token"]),
                 "Protocol-Version": PROTOCOL_VERSION,
                 "Device-Id": self.get_mac_address(),
                 "Client-Id": self.generate_uuid()
@@ -213,7 +215,8 @@ class WebSocketClient(object):
             
             # 对比 text_value 和上次的值是否相同
             if text_value != self.__last_text_value and text_value is not None:
-                print(text_value)  # 仅在不同时打印
+                # print(text_value)  # 仅在不同时打印
+                print("内存：",gc.mem_free())
                 self.__last_text_value = text_value  # 更新为最新的 text_value
         # logger.debug("recv data: ", data)
         return data

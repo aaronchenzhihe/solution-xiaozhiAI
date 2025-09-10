@@ -9,6 +9,7 @@ from usr.utils import ChargeManager, AudioManager, NetManager, TaskManager
 from usr.threading import Thread, Event, Condition
 from usr.logging import getLogger
 import sys_bus
+import _thread
 # from usr import UI
 
 
@@ -114,7 +115,7 @@ class Application(object):
         self.__record_thread_stop_event = Event()
         self.__voice_activity_event = Event()
         self.__keyword_spotting_event = Event()
-
+        
     def __record_thread_handler(self):
         """纯粹是为了kws&vad能识别才起的线程持续读音频"""
         logger.debug("record thread handler enter")
@@ -122,18 +123,19 @@ class Application(object):
             self.audio_manager.opus_read()
             utime.sleep_ms(5)
         logger.debug("record thread handler exit")
+        
 
     def start_kws(self):
         self.audio_manager.start_kws()
         self.__record_thread_stop_event.clear()
         self.__record_thread = Thread(target=self.__record_thread_handler)
         self.__record_thread.start(stack_size=64)
-    
+        
     def stop_kws(self):
         self.__record_thread_stop_event.set()
         self.__record_thread.join()
         self.audio_manager.stop_kws()
-
+        
     def start_vad(self):
         self.audio_manager.start_vad()
     
@@ -199,9 +201,9 @@ class Application(object):
             self.__keyword_spotting_event.set()
 
     def on_voice_activity_detection(self, state):
-        # gc.collect()
         logger.info("on_voice_activity_detection: {}".format(state))
         if state == 1:
+            # gc.collect()
             # self.__protocol.abort()
             self.__voice_activity_event.set()  # 有人声
         else:
@@ -215,7 +217,8 @@ class Application(object):
         return getattr(self, "handle_{}_message".format(msg["type"]))(msg)
 
     def handle_stt_message(data, msg):
-        raise NotImplementedError("handle_stt_message not implemented")
+        print("stt数据",msg)
+        # raise NotImplementedError("handle_stt_message not implemented")
 
     def handle_tts_message(self, msg):
         state = msg["state"]
@@ -225,7 +228,8 @@ class Application(object):
             self.wifi_green_led.off()
         else:
             pass
-        raise NotImplementedError("handle_tts_message not implemented")
+        print("tts数据",msg)
+        # raise NotImplementedError("handle_tts_message not implemented")
 
 #"happy" "cool"  "angry"  "think"
 # ... existing code ...
@@ -233,8 +237,12 @@ class Application(object):
         raise NotImplementedError("handle_llm_message not implemented")
         
     def handle_iot_message(data, msg):
-        raise NotImplementedError("handle_iot_message not implemented")
+        print("iot数据",msg)
+        # raise NotImplementedError("handle_iot_message not implemented")
     
+    def handle_error_message(data, msg):
+        print("error数据",msg)
+        # raise NotImplementedError("handle_error_message not implemented")
 
     def run(self):
         self.charge_manager.enable_charge()
