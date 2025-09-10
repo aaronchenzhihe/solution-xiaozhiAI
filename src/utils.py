@@ -27,6 +27,25 @@ class AudioManager(object):
         self.rec = audio.Record(channel)
         self.rec.gain_set(3,9)
         self.__skip = 0
+        
+    def setvolume_down(self):
+        global volume
+        volume -= 1
+        if volume < 0: volume = 0
+        self.aud.setVolume(volume)
+        return volume
+        
+    def setvolume_up(self):
+        global volume
+        volume += 1
+        if volume > 11: volume = 11
+        self.aud.setVolume(volume)
+        return volume
+    
+    def setvolume_close(self):
+        self.aud.setVolume(0)
+        volume = 0
+        return volume
 
     # ========== 音频文件 ====================
 

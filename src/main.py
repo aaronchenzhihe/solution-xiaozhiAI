@@ -10,6 +10,7 @@ from usr.threading import Thread, Event, Condition
 from usr.logging import getLogger
 import sys_bus
 import _thread
+import ujson as json
 # from usr import UI
 
 
@@ -203,8 +204,6 @@ class Application(object):
     def on_voice_activity_detection(self, state):
         logger.info("on_voice_activity_detection: {}".format(state))
         if state == 1:
-            # gc.collect()
-            # self.__protocol.abort()
             self.__voice_activity_event.set()  # 有人声
         else:
             self.__voice_activity_event.clear()  # 无人声
@@ -217,7 +216,7 @@ class Application(object):
         return getattr(self, "handle_{}_message".format(msg["type"]))(msg)
 
     def handle_stt_message(data, msg):
-        print("stt数据",msg)
+        pass
         # raise NotImplementedError("handle_stt_message not implemented")
 
     def handle_tts_message(self, msg):
@@ -228,20 +227,47 @@ class Application(object):
             self.wifi_green_led.off()
         else:
             pass
-        print("tts数据",msg)
         # raise NotImplementedError("handle_tts_message not implemented")
 
 #"happy" "cool"  "angry"  "think"
 # ... existing code ...
     def handle_llm_message(data, msg):
         raise NotImplementedError("handle_llm_message not implemented")
+    
+    def handle_mcp_message(self, msg):
+        # print("msg: ", msg)
+        data=msg.to_bytes()
+
+        # 解析JSON字符串为字典
+        data_dict = json.loads(data)
+        id=1
+        # 提取method内容
+        method = data_dict['payload']['method']
+        if 'id' in data_dict['payload']:
+            id=data_dict['payload']['id']
+        print("MCP请求: ",method)
+        
+        if method == "initialize":
+            self.__protocol.mcp_initialize()
+        elif method == "tools/list":
+            self.__protocol.mcp_tools_list()
+        elif method =="tools/call":
+            handle =data_dict['payload']['params']['name']
+            if handle == "self.setvolume_down()":     
+                print("当前音量大小",self.audio_manager.setvolume_down())
+            elif handle == "self.setvolume_up()":
+                print("当前音量大小",self.audio_manager.setvolume_up())
+            elif handle == "self.setvolume_close()":
+                print("当前音量大小",self.audio_manager.setvolume_close())
+            self.__protocol.mcp_tools_call(tool_name=handle,req_id=id)
+        # raise NotImplementedError("handle_mcp_message not implemented")
         
     def handle_iot_message(data, msg):
-        print("iot数据",msg)
+        pass
         # raise NotImplementedError("handle_iot_message not implemented")
     
     def handle_error_message(data, msg):
-        print("error数据",msg)
+        pass
         # raise NotImplementedError("handle_error_message not implemented")
 
     def run(self):
