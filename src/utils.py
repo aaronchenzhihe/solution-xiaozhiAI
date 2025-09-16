@@ -12,7 +12,7 @@ from usr.logging import getLogger
 
 
 logger = getLogger(__name__)
-
+volume = 7
 
 # ==================== 音频管理 ====================
 
