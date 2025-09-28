@@ -31,8 +31,8 @@ class OTA(object):
                 "iccid": "89860125801125426850"
             }
         }
-        self.url = "https://api.tenclass.net/xiaozhi/ota/"
-        # self.url ="http://xiaozhi.pandastroller.com:8002/xiaozhi/ota/"
+        # self.url = "https://api.tenclass.net/xiaozhi/ota/"
+        self.url ="http://xiaozhi.pandastroller.com:8002/xiaozhi/ota/"
         self.response = None
         self.UDP_IP = None
         self.UDP_PORT = None

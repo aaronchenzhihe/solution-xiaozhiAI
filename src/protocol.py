@@ -72,7 +72,7 @@ class WebSocketClient(object):
         self.ota = OTA(mac=self.get_mac_address())
         self.debug = debug
         WSS_HOST = self.ota.run()
-        self.host = WSS_HOST['websocket']["url"]
+        self.host = WSS_HOST["websocket"]["url"]
         self.__resp_helper = RespHelper()
         self.__recv_thread = None
         self.__audio_message_handler = None
@@ -138,7 +138,7 @@ class WebSocketClient(object):
             self.host, 
             headers={
                 "Authorization": "Bearer {}".format(WSS_HOST["websocket"]["token"]),
-                "Protocol-Version": WSS_HOST["firmware"]["version"],
+                "Protocol-Version": PROTOCOL_VERSION,
                 "Device-Id": self.get_mac_address(),
                 "Client-Id": self.generate_uuid()
             }, 
@@ -178,8 +178,6 @@ class WebSocketClient(object):
                         self.__resp_helper.put(m)
                 else:
                     self.__handle_json_message(m)
-
-
 
     def __handle_audio_message(self, raw):
         if self.__audio_message_handler is None:
@@ -242,15 +240,12 @@ class WebSocketClient(object):
                 }
             }
         )
-        try:
-            with self.__resp_helper:
-                self.send(req.to_bytes())
-                resp = self.__resp_helper.get(req, timeout=10)
-                return resp
-        except TimeoutError as e:
-            # 记录日志并返回默认值或抛出自定义异常
-            logger.error("Request timed out: {}",e)
-            return None
+        with self.__resp_helper:
+            self.send(req.to_bytes())
+            resp = self.__resp_helper.get(req, timeout=10)
+            # {'transport': 'websocket', 'type': 'hello', 'session_id': 'd2091edb', 'audio_params': {'frame_duration': 60, 'channels': 1, 'format': 'opus', 'sample_rate': 24000}, 'version': 1}
+            # logger.debug("hello resp: ", resp)
+            return resp
 
     def listen(self, state, mode="auto", session_id=""):
         with self.__resp_helper:
