@@ -78,7 +78,7 @@ class Application(object):
 
     def __init__(self):
         # 初始化唤醒按键
-        self.talk_key = ExtInt(ExtInt.GPIO19, ExtInt.IRQ_RISING_FALLING, ExtInt.PULL_PU, self.on_talk_key_click, 50)
+        self.talk_key = ExtInt(ExtInt.GPIO20, ExtInt.IRQ_RISING_FALLING, ExtInt.PULL_PU, self.on_talk_key_click, 50)
         
         # 初始化 led; write(1) 灭； write(0) 亮
         self.wifi_red_led = Led(33)
@@ -89,6 +89,7 @@ class Application(object):
         self.lte_green_led = Led(24)
         self.led_power_pin = Pin(Pin.GPIO27, Pin.OUT, Pin.PULL_DISABLE, 0)
         self.prev_emoj = None
+
         
         # 初始化充电管理
         self.charge_manager = ChargeManager()
@@ -159,14 +160,20 @@ class Application(object):
                 self.__protocol.hello()
                 self.__protocol.wakeword_detected("小智")
                 is_listen_flag = False
+                buffer = []  # 用于缓存最近5帧
                 while True:
                     data = self.audio_manager.opus_read()
+                    buffer.append(data)
+                    if len(buffer) > 5:
+                        buffer.pop(0)
                     if self.__voice_activity_event.is_set():
                         # 有人声
                         if not is_listen_flag:
                             self.__protocol.abort()
                             self.__protocol.listen("start")
                             is_listen_flag = True
+                            for frame in buffer:
+                                self.__protocol.send(frame)
                         self.__protocol.send(data)
                         # logger.debug("send opus data to server")
                     else:
@@ -175,6 +182,7 @@ class Application(object):
                             is_listen_flag = False
                     if not self.__protocol.is_state_ok():
                         break
+                    utime.sleep_ms(1)
                     # logger.debug("read opus data length: {}".format(len(data)))
         except Exception as e:
             logger.debug("working thread handler got Exception: {}".format(repr(e)))
@@ -188,6 +196,7 @@ class Application(object):
             return
         self.__working_thread = Thread(target=self.__working_thread_handler)
         self.__working_thread.start()
+        self.__keyword_spotting_event.clear()
         
     def on_keyword_spotting(self, state):
         logger.info("on_keyword_spotting: {}".format(state))
@@ -216,8 +225,8 @@ class Application(object):
         return getattr(self, "handle_{}_message".format(msg["type"]))(msg)
 
     def handle_stt_message(data, msg):
-        pass
-        # raise NotImplementedError("handle_stt_message not implemented")
+        # pass
+        raise NotImplementedError("handle_stt_message not implemented")
 
     def handle_tts_message(self, msg):
         state = msg["state"]
@@ -227,7 +236,7 @@ class Application(object):
             self.wifi_green_led.off()
         else:
             pass
-        # raise NotImplementedError("handle_tts_message not implemented")
+        raise NotImplementedError("handle_tts_message not implemented")
 
 #"happy" "cool"  "angry"  "think"
 # ... existing code ...
@@ -235,7 +244,7 @@ class Application(object):
         raise NotImplementedError("handle_llm_message not implemented")
     
     def handle_mcp_message(self, msg):
-        # print("msg: ", msg)
+        print("msg: ", msg)
         data=msg.to_bytes()
 
         # 解析JSON字符串为字典
