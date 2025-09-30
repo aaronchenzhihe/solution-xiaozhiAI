@@ -19,7 +19,7 @@ volume = 7
 
 class AudioManager(object):
 
-    def __init__(self, channel=0, volume=10, pa_number=29):
+    def __init__(self, channel=0, volume=7, pa_number=29):
         self.aud = audio.Audio(channel)  # 初始化音频播放通道
         self.aud.set_pa(pa_number)
         self.aud.setVolume(volume)  # 设置音量
@@ -109,7 +109,12 @@ class AudioManager(object):
             pass
     
     def start_kws(self):
+        # list=["_xiao_zhi_xiao_zhi","_xiao_tian_xiao_tian","_xiao_zi_xiao_zi","_xiao_shi_xiao_shi","_xiao_si_xiao_si","_xiao_zhi_xiao_zi","_xiao_zi_xiao_zhi"]
         self.rec.ovkws_start("_xiao_zhi_xiao_zhi", 0.7)
+        self.rec.ovkws_start("_xiao_tian_xiao_tian", 0.7)
+        self.rec.ovkws_start("_xiao_zi_xiao_zi", 0.7)
+        self.rec.ovkws_start("_xiao_zhi_xiao_zi", 0.7)
+        self.rec.ovkws_start("_xiao_zi_xiao_zhi", 0.7)
 
     def stop_kws(self):
         self.rec.ovkws_stop()
