@@ -13,7 +13,7 @@ from usr.logging import getLogger
 
 logger = getLogger(__name__)
 volume = 7
-
+name = '_xiao_zhi_xiao_zhi'
 # ==================== 音频管理 ====================
 
 
@@ -43,8 +43,15 @@ class AudioManager(object):
         return volume
     
     def setvolume_close(self):
+        global volume
         self.aud.setVolume(0)
         volume = 0
+        return volume
+    
+    def setvolume(self,data):
+        global volume
+        self.aud.setVolume(data)
+        volume = data
         return volume
 
     # ========== 音频文件 ====================
@@ -107,10 +114,15 @@ class AudioManager(object):
                 pass
         else:
             pass
-    
+    def new_name(self,data):
+        global name
+        name=data
+        # print("当前唤醒词：", name)
+        return name
     def start_kws(self):
         # list=["_xiao_zhi_xiao_zhi","_xiao_tian_xiao_tian","_xiao_zi_xiao_zi","_xiao_shi_xiao_shi","_xiao_si_xiao_si","_xiao_zhi_xiao_zi","_xiao_zi_xiao_zhi"]
-        self.rec.ovkws_start("_xiao_zhi_xiao_zhi", 0.7)
+        # self.rec.ovkws_start("_xiao_zhi_xiao_zhi", 0.7)
+        self.rec.ovkws_start(name, 0.7)
 
 
     def stop_kws(self):
