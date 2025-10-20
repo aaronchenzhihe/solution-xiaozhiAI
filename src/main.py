@@ -136,7 +136,7 @@ class Application(object):
     def stop_kws(self):
         self.__record_thread_stop_event.set()
         self.__record_thread.join()
-        self.audio_manager.stop_kws()
+        # self.audio_manager.stop_kws()
         
     def start_vad(self):
         self.audio_manager.start_vad()
@@ -165,7 +165,7 @@ class Application(object):
                 while True:
                     data = self.audio_manager.opus_read()
                     buffer.append(data)
-                    if len(buffer) > 5:
+                    if len(buffer) > 3:
                         buffer.pop(0)
                     if self.__voice_activity_event.is_set():
                         # 有人声
@@ -207,10 +207,10 @@ class Application(object):
                 return
             self.__working_thread = Thread(target=self.__working_thread_handler)
             self.__working_thread.start()
-            self.__keyword_spotting_event.clear()
-        else:
             self.__keyword_spotting_event.set()
-
+        else:
+            self.__keyword_spotting_event.clear()
+            
     def on_voice_activity_detection(self, state):
         logger.info("on_voice_activity_detection: {}".format(state))
         if state == 1:
