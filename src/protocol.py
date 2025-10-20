@@ -104,9 +104,9 @@ class WebSocketClient(object):
         
     @staticmethod
     def get_mac_address():
-        mac = str(uuid.UUID(int=int(modem.getDevImei())))[-12:]
-        return ":".join([mac[i:i + 2] for i in range(0, 12, 2)])
-        # return "64:e8:33:48:ec:c2"
+        # mac = str(uuid.UUID(int=int(modem.getDevImei())))[-12:]
+        # return ":".join([mac[i:i + 2] for i in range(0, 12, 2)])
+        return "64:e8:33:48:ec:c2"
 
     @staticmethod
     def generate_uuid() -> str:
@@ -352,7 +352,7 @@ class WebSocketClient(object):
         }  
         self.send_mcp(payload, session_id)
     
-    def mcp_tools_list(self, cursor="", session_id="", req_id=2):
+    def mcp_tools_list(self,session_id="", req_id=2):
         """
         发送MCP tools/list响应请求
         """
@@ -376,13 +376,35 @@ class WebSocketClient(object):
                     "description": "只通过调用setvolume_close方法来静音,接收到回应后会播报当前音量大小",
                     "inputSchema": {}
                 },
+                {
+                    "name": "self.setvolume()",
+                    "description": "设置音量大小,接收到回应后会播报当前音量大小,volume范围是0-11",
+                    "inputSchema": {
+                        "volume": {
+                            "type": "int",
+                            "minimum": 0,
+                            "maximum": 11
+                        }
+                    },
+                    "required": ["volume"]
+                },               
+                {
+                    "name": "self.new_name()",
+                    "description": "当需要改唤醒词时就调用该new_name方法来设置新的唤醒词,接收到回应后会播报当前唤醒词,输入的参数名是name且内容只能是拼音，每个拼音之间用'_'连接起来，例如我说唤醒词改成'小智小智'则传入参数为'_xiao_zhi_xiao_zhi'，不可以传入汉字",
+                    "parameters": {
+                    "name": {
+                        "type": "text",
+                    }
+                },
+                    "required": ["name"]
+                }
                 ],
             }
             }
         
         self.send_mcp(payload, session_id)
         
-    def mcp_tools_call(self, session_id="", req_id="", error=None, tool_name=""):
+    def mcp_tools_call(self, session_id="", req_id="", error=None, tool_name="",args=None):
         """
         发送MCP tools/call响应
         :param error: 如果为None则返回成功响应,否则返回错误响应(字典,包含code和message)
@@ -417,6 +439,28 @@ class WebSocketClient(object):
                     "result": {
                         "content": [
                             { "type": "text", "text": "已静音" }
+                        ],
+                        "isError": False
+                    }
+                }
+            elif tool_name == "self.setvolume()":
+                payload = {
+                    "jsonrpc": "2.0",
+                    "id": req_id,
+                    "result": {
+                        "content": [
+                            { "type": "text", "text": "音量已设置为{}".format(args)}
+                        ],
+                        "isError": False
+                    }
+                }
+            elif tool_name == "self.new_name()":
+                payload = {
+                    "jsonrpc": "2.0",
+                    "id": req_id,
+                    "result": {
+                        "content": [
+                            { "type": "text", "text": "唤醒词已更改为{}".format(args)}
                         ],
                         "isError": False
                     }

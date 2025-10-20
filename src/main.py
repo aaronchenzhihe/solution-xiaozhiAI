@@ -5,7 +5,7 @@ import utime
 import gc
 from machine import ExtInt,Pin
 from usr.protocol import WebSocketClient
-from usr.utils import ChargeManager, AudioManager, NetManager, TaskManager
+from usr.utils import ChargeManager, AudioManager, NetManager, TaskManager, name
 from usr.threading import Thread, Event, Condition
 from usr.logging import getLogger
 import sys_bus
@@ -136,7 +136,7 @@ class Application(object):
     def stop_kws(self):
         self.__record_thread_stop_event.set()
         self.__record_thread.join()
-        self.audio_manager.stop_kws()
+        # self.audio_manager.stop_kws()
         
     def start_vad(self):
         self.audio_manager.start_vad()
@@ -153,18 +153,19 @@ class Application(object):
         self.start_kws()
 
     def __chat_process(self):
+        global name
         self.start_vad()
         try:
             with self.__protocol:
                 self.power_red_led.on()
                 self.__protocol.hello()
-                self.__protocol.wakeword_detected("小智")
+                self.__protocol.wakeword_detected(name)
                 is_listen_flag = False
                 buffer = []  # 用于缓存最近5帧
                 while True:
                     data = self.audio_manager.opus_read()
                     buffer.append(data)
-                    if len(buffer) > 5:
+                    if len(buffer) > 3:
                         buffer.pop(0)
                     if self.__voice_activity_event.is_set():
                         # 有人声
@@ -206,10 +207,10 @@ class Application(object):
                 return
             self.__working_thread = Thread(target=self.__working_thread_handler)
             self.__working_thread.start()
-            self.__keyword_spotting_event.clear()
-        else:
             self.__keyword_spotting_event.set()
-
+        else:
+            self.__keyword_spotting_event.clear()
+            
     def on_voice_activity_detection(self, state):
         logger.info("on_voice_activity_detection: {}".format(state))
         if state == 1:
@@ -252,22 +253,29 @@ class Application(object):
         id=1
         # 提取method内容
         method = data_dict['payload']['method']
+        # arguments = data_dict['payload']["arguments"]
         if 'id' in data_dict['payload']:
             id=data_dict['payload']['id']
         print("MCP请求: ",method)
-        
         if method == "initialize":
             self.__protocol.mcp_initialize()
         elif method == "tools/list":
             self.__protocol.mcp_tools_list()
         elif method =="tools/call":
             handle =data_dict['payload']['params']['name']
+            
             if handle == "self.setvolume_down()":     
                 print("当前音量大小",self.audio_manager.setvolume_down())
             elif handle == "self.setvolume_up()":
                 print("当前音量大小",self.audio_manager.setvolume_up())
             elif handle == "self.setvolume_close()":
                 print("当前音量大小",self.audio_manager.setvolume_close())
+            elif handle == "self.setvolume()":
+                arguments = data_dict['payload']["params"]["arguments"]["volume"]
+                print("当前音量大小",arguments,self.audio_manager.setvolume(arguments))
+            elif handle == "self.new_name()":
+                arguments = data_dict['payload']["params"]["arguments"]["name"]
+                print("收到改名指令",self.audio_manager.new_name(arguments))
             self.__protocol.mcp_tools_call(tool_name=handle,req_id=id)
         # raise NotImplementedError("handle_mcp_message not implemented")
         
