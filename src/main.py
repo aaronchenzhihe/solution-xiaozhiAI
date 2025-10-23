@@ -165,7 +165,7 @@ class Application(object):
                 while True:
                     data = self.audio_manager.opus_read()
                     buffer.append(data)
-                    if len(buffer) > 3:
+                    if len(buffer) > 7:
                         buffer.pop(0)
                     if self.__voice_activity_event.is_set():
                         # 有人声
@@ -173,7 +173,7 @@ class Application(object):
                             self.__protocol.abort()
                             self.__protocol.listen("start")
                             is_listen_flag = True
-                            for frame in buffer:
+                            for frame in buffer[:6]:  # 发送缓存的前6帧
                                 self.__protocol.send(frame)
                         self.__protocol.send(data)
                         # logger.debug("send opus data to server")
@@ -183,7 +183,7 @@ class Application(object):
                             is_listen_flag = False
                     if not self.__protocol.is_state_ok():
                         break
-                    utime.sleep_ms(1)
+                    # utime.sleep_ms(1)
                     # logger.debug("read opus data length: {}".format(len(data)))
         except Exception as e:
             logger.debug("working thread handler got Exception: {}".format(repr(e)))
@@ -202,14 +202,15 @@ class Application(object):
     def on_keyword_spotting(self, state):
         logger.info("on_keyword_spotting: {}".format(state))
         if state[0] == 0:
-            # 唤醒词触发
-            if self.__working_thread is not None and self.__working_thread.is_running():
-                return
-            self.__working_thread = Thread(target=self.__working_thread_handler)
-            self.__working_thread.start()
-            self.__keyword_spotting_event.set()
-        else:
-            self.__keyword_spotting_event.clear()
+            if state[1] == 1:
+                # 唤醒词触发
+                if self.__working_thread is not None and self.__working_thread.is_running():
+                    return
+                self.__working_thread = Thread(target=self.__working_thread_handler)
+                self.__working_thread.start()
+                self.__keyword_spotting_event.set()
+            else:
+                self.__keyword_spotting_event.clear()
             
     def on_voice_activity_detection(self, state):
         logger.info("on_voice_activity_detection: {}".format(state))
@@ -275,7 +276,7 @@ class Application(object):
                 print("当前音量大小",arguments,self.audio_manager.setvolume(arguments))
             elif handle == "self.new_name()":
                 arguments = data_dict['payload']["params"]["arguments"]["name"]
-                print("收到改名指令",self.audio_manager.new_name(arguments))
+                print("neme:",self.audio_manager.new_name(arguments))
             self.__protocol.mcp_tools_call(tool_name=handle,req_id=id)
         # raise NotImplementedError("handle_mcp_message not implemented")
         
@@ -294,6 +295,7 @@ class Application(object):
         self.start_kws()
         self.led_power_pin.write(1)
         self.power_red_led.blink(250, 250)
+        self.stop_vad()
 
 if __name__ == "__main__":
     app = Application()
