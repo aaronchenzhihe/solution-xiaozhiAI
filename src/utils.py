@@ -76,7 +76,7 @@ class AudioManager(object):
 
     def open_opus(self):
         self.pcm = audio.Audio.PCM(0, 1, 16000, 2, 1, 15)  # 5 -> 25
-        self.opus = Opus(self.pcm, 0, 6000)  # 6000 ~ 128000
+        self.opus = Opus(self.pcm, 0, 60000)  # 6000 ~ 128000
     
     def close_opus(self):
         self.opus.close()
