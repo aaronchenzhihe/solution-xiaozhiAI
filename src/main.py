@@ -202,7 +202,7 @@ class Application(object):
     def on_keyword_spotting(self, state):
         logger.info("on_keyword_spotting: {}".format(state))
         if state[0] == 0:
-            if state[1] == 1:
+            if state[1] != 0:
                 # 唤醒词触发
                 if self.__working_thread is not None and self.__working_thread.is_running():
                     return
