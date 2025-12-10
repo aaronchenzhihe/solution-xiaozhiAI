@@ -80,6 +80,8 @@ Before getting started, ensure you have the following prerequisites:
 
 5. **After keyword wake-up, start a conversation. Refer to the runtime log:**
 
+   If it is the first time to wake up, a voice verification code xxxx will be broadcast to remind the user to bind the device in the Xiaozhi backend. The link to the Xiaozhi backend is: https://xiaozhi.me/. After successful registration, re-run the script to wake up and you can have a normal conversation
+
    ![](./media/20250425132727.png)
 
 6. For a usage example, refer to the demo video: `media/example_video.mp4`
